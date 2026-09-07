@@ -3,6 +3,7 @@ package com.cis.auth_service.service.impl;
 import com.cis.auth_service.dto.RoleDto;
 import com.cis.auth_service.dto.SignupDto;
 import com.cis.auth_service.dto.SignupResponse;
+import com.cis.auth_service.dto.UserDto;
 import com.cis.auth_service.entity.Role;
 import com.cis.auth_service.entity.User;
 import com.cis.auth_service.exception.UserAlreadyExist;
@@ -13,6 +14,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -31,7 +35,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public SignupResponse registerUser(SignupDto signupDto) {
-        if (userRepository.findByUsername(signupDto.getUsername()) != null) {
+        Optional<User> byUsername = userRepository.findByUsername(signupDto.getUsername());
+        if (byUsername.isPresent()) {
             throw new UserAlreadyExist("User already exists");
         }
         if(signupDto.getConfirmPassword()!=null && !signupDto.getPassword().equals(signupDto.getConfirmPassword())){
@@ -46,5 +51,14 @@ public class AuthServiceImpl implements AuthService {
         SignupResponse signupResponse = modelMapper.map(save, SignupResponse.class);
         signupResponse.setRole(modelMapper.map(save.getRole(), RoleDto.class));
         return signupResponse;
+    }
+
+    @Override
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream().map(user -> {
+            UserDto userDto = modelMapper.map(user, UserDto.class);
+            userDto.setRole(modelMapper.map(user.getRole(), RoleDto.class));
+            return userDto;
+        }).toList();
     }
 }
