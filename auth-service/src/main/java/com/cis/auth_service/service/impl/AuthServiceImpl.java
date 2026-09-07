@@ -1,9 +1,6 @@
 package com.cis.auth_service.service.impl;
 
-import com.cis.auth_service.dto.RoleDto;
-import com.cis.auth_service.dto.SignupDto;
-import com.cis.auth_service.dto.SignupResponse;
-import com.cis.auth_service.dto.UserDto;
+import com.cis.auth_service.dto.*;
 import com.cis.auth_service.entity.Role;
 import com.cis.auth_service.entity.User;
 import com.cis.auth_service.exception.UserAlreadyExist;
@@ -60,5 +57,13 @@ public class AuthServiceImpl implements AuthService {
             userDto.setRole(modelMapper.map(user.getRole(), RoleDto.class));
             return userDto;
         }).toList();
+    }
+
+    @Override
+    public SigninResponseDto loginUser(SigninDto signinDto) {
+//        Optional<User> dbUser = userRepository.findByUsernameOrEmail(signinDto.getUsername(), signinDto.getEmail());
+//        if(dbUser.isPresent()){
+//        }
+        return null;
     }
 }
