@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/connections")
 @RestController
+@CrossOrigin("*")
 public class NewApplicationController {
 
     @Autowired

@@ -24,7 +24,7 @@ public class NewConnectionVO extends BaseEntity{
     private String connectionType;
     private String purpose;
     private double requestedLoad;
-    private int phase;
+    private String phase;
     private int houseNumber;
     private String street;
     private String city;
