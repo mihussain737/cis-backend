@@ -1,27 +1,14 @@
-package com.cis.new_connection_service.entity;
+package com.cis.new_connection_service.dto;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Entity
-@NoArgsConstructor @AllArgsConstructor
-@Table(name = "new_connection_app")
-public class NewConnectionVO extends BaseEntity{
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long regId;
-
-    @Column(unique = true)
-    private String applicationNumber;
-    private Long customerId;
+@Data @NoArgsConstructor @AllArgsConstructor
+public class ConnectionResponseDto {
     private String applicantName;
     private String mobileNumber;
     private String email;
-    @Column(unique = true)
     private String connectionType;
     private String purpose;
     private double requestedLoad;
@@ -33,6 +20,4 @@ public class NewConnectionVO extends BaseEntity{
     private String state;
     private int pincode;
     private String ownershipType;
-    private String applicationStatus;
-    private int recordStatus=1;
 }
