@@ -21,4 +21,6 @@ public class ConnectionRequestDto {
     private String state;
     private int pincode;
     private String ownershipType;
+    private String applicationStatus;
+    private String applicationNumber;
 }

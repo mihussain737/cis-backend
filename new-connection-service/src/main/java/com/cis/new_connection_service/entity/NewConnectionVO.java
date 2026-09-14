@@ -21,7 +21,6 @@ public class NewConnectionVO extends BaseEntity{
     private String applicantName;
     private String mobileNumber;
     private String email;
-    @Column(unique = true)
     private String connectionType;
     private String purpose;
     private double requestedLoad;

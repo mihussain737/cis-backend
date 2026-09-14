@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class ConnectionResponseDto {
+    private String customerId;
     private String applicantName;
     private String mobileNumber;
     private String email;
@@ -20,4 +21,5 @@ public class ConnectionResponseDto {
     private String state;
     private int pincode;
     private String ownershipType;
+    private String applicationStatus;
 }
