@@ -17,7 +17,7 @@ public class NewConnectionVO extends BaseEntity{
 
     @Column(unique = true)
     private String applicationNumber;
-    private String customerId;
+    private Long customerId;
     private String applicantName;
     private String mobileNumber;
     private String email;

@@ -5,8 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data @NoArgsConstructor @AllArgsConstructor
-public class ConnectionRequestDto {
-
+public class ConnectionResponseDto {
+    private String customerId;
     private String applicantName;
     private String mobileNumber;
     private String email;
@@ -22,5 +22,4 @@ public class ConnectionRequestDto {
     private int pincode;
     private String ownershipType;
     private String applicationStatus;
-    private String applicationNumber;
 }

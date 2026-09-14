@@ -1,6 +1,7 @@
 package com.cis.new_connection_service.controller;
 
 import com.cis.new_connection_service.dto.ConnectionRequestDto;
+import com.cis.new_connection_service.dto.ConnectionResponseDto;
 import com.cis.new_connection_service.service.ConnectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequestMapping("/api/connections")
 @RestController
@@ -30,5 +33,12 @@ public class NewApplicationController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @GetMapping()
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<ConnectionResponseDto>> getConnectionDetails(){
+        List<ConnectionResponseDto> connectionResposeDtoList=connectionService.getAllPendingConnectionDetails();
+        return new ResponseEntity<>(connectionResposeDtoList,HttpStatus.OK);
     }
 }
