@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface ConsumerRepository extends JpaRepository<ConsumerMasterVO,String> {
     boolean existsByAccountNo(Long accountNo);
+    Optional<ConsumerMasterVO> findByAccountNo(Long accountNo);
+    Optional<ConsumerMasterVO> findByConsumerId(String consumerId);
 }
