@@ -14,6 +14,7 @@ public class MeterStockImpl implements MeterStockService {
     @Override
     public MeterStock saveMeter(MeterStock meterStock) {
         meterStock.setCheckCondition(meterStock.getMeterNo()+","+meterStock.getMeterMake());
+        meterStock.setMeterAvailable('N');
         MeterStock savedMeter = meterStockRepository.save(meterStock);
         return savedMeter;
     }

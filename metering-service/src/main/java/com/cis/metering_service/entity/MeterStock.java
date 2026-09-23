@@ -14,6 +14,7 @@ public class MeterStock extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String meterStockId;
+    @Column(unique = true,nullable = false)
     private String meterNo;
     private String meterMake;
     private String meterPhase;
@@ -25,4 +26,5 @@ public class MeterStock extends BaseEntity{
     private int recordStatus=1;
     @Column(unique = true)
     private String checkCondition;
+    private Character meterAvailable;
 }

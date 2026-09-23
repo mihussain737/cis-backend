@@ -27,4 +27,8 @@ public class ConsMtrRel extends BaseEntity {
     private double mf;
 
     private LocalDateTime mtrAssignedDate;
+
+    private double initialKwh;
+    private double initialKvah;
+    private double initialKva;
 }

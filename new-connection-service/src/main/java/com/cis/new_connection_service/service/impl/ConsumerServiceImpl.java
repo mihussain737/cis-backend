@@ -2,6 +2,7 @@ package com.cis.new_connection_service.service.impl;
 
 import com.cis.new_connection_service.dto.ConsumerDto;
 import com.cis.new_connection_service.entity.ConsumerMasterVO;
+import com.cis.new_connection_service.exception.CustomerNotFoundException;
 import com.cis.new_connection_service.repository.ConsumerRepository;
 import com.cis.new_connection_service.service.ConsumerService;
 import org.modelmapper.ModelMapper;
@@ -30,5 +31,12 @@ public class ConsumerServiceImpl implements ConsumerService {
                         new RuntimeException("Consumer not found"));
         ConsumerDto consumerDto = modelMapper.map(consumer, ConsumerDto.class);
         return consumerDto;
+    }
+
+    @Override
+    public ConsumerDto getConsumerByAccountNo(Long accountNo) {
+        ConsumerMasterVO consumerMasterVO = consumerRepository.findByAccountNo(accountNo)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with account no: " + accountNo));
+        return modelMapper.map(consumerMasterVO, ConsumerDto.class);
     }
 }
