@@ -5,6 +5,7 @@ import com.cis.metering_service.dto.ConsMtrRelRequest;
 import com.cis.metering_service.dto.ConsumerDto;
 import com.cis.metering_service.entity.ConsMtrRel;
 import com.cis.metering_service.entity.MeterStock;
+import com.cis.metering_service.exception.ConsumerNotFoundException;
 import com.cis.metering_service.repository.ConsMtrRelRepository;
 import com.cis.metering_service.repository.MeterStockRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +55,11 @@ public class ConsMtrRelService {
 
         // 4. Save relationship
         return consMtrRelRepository.save(relation);
+    }
+
+    public ConsMtrRel getConsumerMeterData(String consumerId){
+        ConsMtrRel consumerMtrData = consMtrRelRepository.findByConsumerId(consumerId).orElseThrow(() ->
+                new ConsumerNotFoundException("Consumer not found"));
+        return consumerMtrData;
     }
 }
