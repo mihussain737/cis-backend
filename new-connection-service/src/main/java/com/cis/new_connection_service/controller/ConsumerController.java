@@ -23,4 +23,12 @@ public class ConsumerController {
         ConsumerDto consumer = consumerService.getConsumerById(consumerId);
         return ResponseEntity.ok(consumer);
     }
+
+    @GetMapping("/{accountNo}/accountNo")
+    public ResponseEntity<ConsumerDto> getConsumerByAccountNo(
+            @PathVariable Long accountNo
+    ) {
+        ConsumerDto consumer = consumerService.getConsumerByAccountNo(accountNo);
+        return ResponseEntity.ok(consumer);
+    }
 }

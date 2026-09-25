@@ -4,7 +4,10 @@ import lombok.Data;
 
 @Data
 public class ConsMtrRelRequest {
-    private String meterStockId;
-    private String consumerId;
+    private String meterNo;
+    private Long accountNo;
     private double mf;
+    private double initialKwh;
+    private double initialKvah;
+    private double initialKva;
 }

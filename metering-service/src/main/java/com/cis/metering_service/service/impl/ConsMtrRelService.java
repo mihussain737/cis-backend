@@ -27,14 +27,13 @@ public class ConsMtrRelService {
 
         // 1. Check meter exists in metering-service
         MeterStock meterStock = meterStockRepository
-                .findById(request.getMeterStockId())
+                .findByMeterNo(request.getMeterNo())
                 .orElseThrow(() ->
                         new RuntimeException("Meter not found"));
 
         // 2. Check consumer exists in new-connection-service
-        ConsumerDto consumer = consumerClient.getConsumerById(
-                request.getConsumerId()
-        );
+        ConsumerDto consumer = consumerClient.getConsumerByAccountNo(
+                request.getAccountNo());
 
         if (consumer == null) {
             throw new RuntimeException("Consumer not found");
@@ -47,6 +46,11 @@ public class ConsMtrRelService {
         relation.setConsumerId(consumer.getConsumerId());
         relation.setMf(request.getMf());
         relation.setMtrAssignedDate(LocalDateTime.now());
+        relation.setInitialKwh(request.getInitialKwh());
+        relation.setInitialKvah(request.getInitialKvah());
+        relation.setInitialKva(request.getInitialKva());
+        meterStock.setMeterAvailable('I');
+        meterStockRepository.save(meterStock);
 
         // 4. Save relationship
         return consMtrRelRepository.save(relation);
