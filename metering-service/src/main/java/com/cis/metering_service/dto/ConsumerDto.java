@@ -6,6 +6,12 @@ import lombok.Data;
 public class ConsumerDto {
 
     private String consumerId;
-    private String consumerName;
+    private Long accountNo;
+    private Long customerId;
+    private String consName;
+    private String consAddress;
     private String mobileNumber;
+    private String loadType;
+    private String typeOfSupply;
+    private String billingStatus;
 }
