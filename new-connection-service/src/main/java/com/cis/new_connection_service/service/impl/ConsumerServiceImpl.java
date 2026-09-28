@@ -39,4 +39,13 @@ public class ConsumerServiceImpl implements ConsumerService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with account no: " + accountNo));
         return modelMapper.map(consumerMasterVO, ConsumerDto.class);
     }
+
+    @Override
+    public ConsumerDto updateConsumerBillingStatus(Long accountNo, String newBillingStatus) {
+        ConsumerDto consumerDto = getConsumerByAccountNo(accountNo);
+        ConsumerMasterVO consumer = modelMapper.map(consumerDto, ConsumerMasterVO.class);
+        consumer.setBillingStatus(newBillingStatus);
+        consumerRepository.save(consumer);
+        return modelMapper.map(consumer,ConsumerDto.class);
+    }
 }

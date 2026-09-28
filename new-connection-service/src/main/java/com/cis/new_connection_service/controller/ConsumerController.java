@@ -4,10 +4,7 @@ import com.cis.new_connection_service.dto.ConsumerDto;
 import com.cis.new_connection_service.service.ConsumerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/consumers")
@@ -30,5 +27,11 @@ public class ConsumerController {
     ) {
         ConsumerDto consumer = consumerService.getConsumerByAccountNo(accountNo);
         return ResponseEntity.ok(consumer);
+    }
+
+    @PutMapping("/{accountNo}/accountNo")
+    public ResponseEntity<ConsumerDto> updateConsumerBillingStatus(@PathVariable Long accountNo,@RequestParam String newBillingStatus){
+        ConsumerDto consumerDto=consumerService.updateConsumerBillingStatus(accountNo,newBillingStatus);
+        return ResponseEntity.ok(consumerDto);
     }
 }
