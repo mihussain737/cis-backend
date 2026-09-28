@@ -50,4 +50,14 @@ public class GlobalExceptionHandler {
         exceptionResponse.setPathname(request.getContextPath());
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest request) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(exception.getMessage());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+        exceptionResponse.setStatus(HttpStatus.NOT_FOUND);
+        exceptionResponse.setPathname(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
 }

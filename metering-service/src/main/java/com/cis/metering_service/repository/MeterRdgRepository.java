@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface MeterRdgRepository extends JpaRepository<MeterReading,String> {
@@ -17,4 +18,17 @@ public interface MeterRdgRepository extends JpaRepository<MeterReading,String> {
         LIMIT 1
         """, nativeQuery = true)
     Optional<MeterReading> findByLatestRdg(@Param("consumerId") String consumerId);
+
+    @Query(value = """
+        SELECT *
+        FROM meter_rdg_t
+        WHERE consumer_id = :consumerId
+        ORDER BY prst_rdg_date DESC
+        LIMIT 1 OFFSET 1
+        """, nativeQuery = true)
+    Optional<MeterReading> findByBeforeLatestRdg(@Param("consumerId") String consumerId);
+
+    Optional<MeterReading> findMeterReadingByRdgMonthAndRdgYearAndConsumerId(Integer rdgMonth, Integer rdgYear, String consumerId);
+
+    Optional<MeterReading> findMeterReadingByPrstRdgDateAndConsumerId(LocalDate prstRdgDate, String consumerId);
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Table(name = "meter_rdg_t")
@@ -16,15 +17,15 @@ public class MeterReading extends  BaseEntity{
     private String meterRdgId;
     private String consumerId;
     private Long prstStatus;
-    private LocalDateTime prstRdgDate;
+    private LocalDate prstRdgDate;
     private Double prstKwh;
     private Double prstkw;
     private Double prstKva;
     private Double prstKvah;
     private Double billedKwh;
     private Double billedKvah;
-    private int rdgMonth;
-    private int rdgYear;
+    private Integer rdgMonth;
+    private Integer rdgYear;
     private String checkCondition;
     private String meterChangeId;
     private LocalDateTime meterChangeDate;

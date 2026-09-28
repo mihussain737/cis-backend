@@ -6,4 +6,6 @@ public interface ConsumerService {
     ConsumerDto getConsumerById(String consumerId);
 
     ConsumerDto getConsumerByAccountNo(Long accountNo);
+
+    ConsumerDto updateConsumerBillingStatus(Long accountNo, String newBillingStatus);
 }
