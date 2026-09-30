@@ -27,6 +27,10 @@ public class SecurityConfig {
                         exception.authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .authorizeHttpRequests(auth->auth
+                        .requestMatchers(
+                                "/api/billing/test",
+                                "/error"
+                        ).permitAll()
                         .requestMatchers("/api/billing/test").permitAll()
                         .requestMatchers("/api/billing/**").hasAnyAuthority("ROLE_USER","ROLE_ADMIN")
                         .anyRequest()

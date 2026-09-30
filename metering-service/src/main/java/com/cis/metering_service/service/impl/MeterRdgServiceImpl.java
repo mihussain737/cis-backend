@@ -6,6 +6,7 @@ import com.cis.metering_service.dto.MeterReadingDto;
 import com.cis.metering_service.entity.ConsMtrRel;
 import com.cis.metering_service.entity.MeterReading;
 import com.cis.metering_service.exception.ConsumerNotFoundException;
+import com.cis.metering_service.exception.ReadingAlreadyDoneForMonth;
 import com.cis.metering_service.exception.ResourceNotFoundException;
 import com.cis.metering_service.repository.MeterRdgRepository;
 import com.cis.metering_service.service.MeterRdgService;
@@ -63,6 +64,11 @@ public class MeterRdgServiceImpl implements MeterRdgService {
         ConsumerDto consumer = consumerClient.getConsumerByAccountNo(accountNo);
         if (consumer == null || consumer.equals("")) {
             throw new ConsumerNotFoundException("Consumer not found with accountNo: " + accountNo);
+        }
+
+        Optional<MeterReading> meteralreadyAvailable = meterRdgRepository.findMeterReadingByRdgMonthAndRdgYearAndConsumerId(meterReadingDto.getRdgMonth(), meterReadingDto.getRdgYear(), consumer.getConsumerId());
+        if(meteralreadyAvailable.isPresent()){
+            throw  new ReadingAlreadyDoneForMonth("Reading already done for month: "+meterReadingDto.getRdgMonth()+" and year: "+meterReadingDto.getRdgYear());
         }
         MeterReading meterReading = modelMapper.map(meterReadingDto, MeterReading.class);
         MeterReadingDto previousRdg = getPreviousRdgFromAccountNo(accountNo);

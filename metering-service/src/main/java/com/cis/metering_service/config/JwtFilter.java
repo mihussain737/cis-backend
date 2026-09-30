@@ -60,6 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             logger.debug("Granted authorities: {}"+authorities);
 
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             username,
@@ -69,6 +70,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext()
                     .setAuthentication(authentication);
+            logger.info("Authentication: {}"+
+                    SecurityContextHolder.getContext().getAuthentication());
 
         } catch (Exception e) {
             logger.error("JWT validation failed: {}"+ e.getMessage());

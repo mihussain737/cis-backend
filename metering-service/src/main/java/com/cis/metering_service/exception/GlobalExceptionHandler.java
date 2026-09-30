@@ -60,4 +60,14 @@ public class GlobalExceptionHandler {
         exceptionResponse.setPathname(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(ReadingAlreadyDoneForMonth.class)
+    public ResponseEntity<ExceptionResponse> handleReadingAlreadyDoneForMonth(ReadingAlreadyDoneForMonth exception, WebRequest request) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setMessage(exception.getMessage());
+        exceptionResponse.setTimestamp(LocalDateTime.now());
+        exceptionResponse.setStatus(HttpStatus.FOUND);
+        exceptionResponse.setPathname(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.FOUND);
+    }
 }
