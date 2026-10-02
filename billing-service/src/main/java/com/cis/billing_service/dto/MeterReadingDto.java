@@ -10,6 +10,12 @@ import java.time.LocalDate;
 public class MeterReadingDto {
 
     private String consumerId;
+    private Long prevStatus;
+    private LocalDate prevRdgDate;
+    private Double prevKwh;
+    private Double prevkw;
+    private Double prevKva;
+    private Double prevKvah;
     private Long prstStatus;
     private LocalDate prstRdgDate;
     private Double prstKwh;

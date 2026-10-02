@@ -16,6 +16,12 @@ public class MeterReading extends  BaseEntity{
     @GeneratedValue(strategy = GenerationType.UUID)
     private String meterRdgId;
     private String consumerId;
+    private Long prevStatus;
+    private LocalDate prevRdgDate;
+    private Double prevKwh;
+    private Double prevkw;
+    private Double prevKva;
+    private Double prevKvah;
     private Long prstStatus;
     private LocalDate prstRdgDate;
     private Double prstKwh;
