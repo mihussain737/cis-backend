@@ -6,6 +6,7 @@ import com.cis.metering_service.dto.MeterReadingDto;
 import com.cis.metering_service.entity.ConsMtrRel;
 import com.cis.metering_service.entity.MeterReading;
 import com.cis.metering_service.exception.ConsumerNotFoundException;
+import com.cis.metering_service.exception.ReadingAlreadyDoneForMonth;
 import com.cis.metering_service.exception.ResourceNotFoundException;
 import com.cis.metering_service.repository.MeterRdgRepository;
 import com.cis.metering_service.service.MeterRdgService;
@@ -64,8 +65,30 @@ public class MeterRdgServiceImpl implements MeterRdgService {
         if (consumer == null || consumer.equals("")) {
             throw new ConsumerNotFoundException("Consumer not found with accountNo: " + accountNo);
         }
+
+        Optional<MeterReading> meteralreadyAvailable = meterRdgRepository.findMeterReadingByRdgMonthAndRdgYearAndConsumerId(meterReadingDto.getRdgMonth(), meterReadingDto.getRdgYear(), consumer.getConsumerId());
+        if(meteralreadyAvailable.isPresent()){
+            throw  new ReadingAlreadyDoneForMonth("Reading already done for month: "+meterReadingDto.getRdgMonth()+" and year: "+meterReadingDto.getRdgYear());
+        }
         MeterReading meterReading = modelMapper.map(meterReadingDto, MeterReading.class);
         MeterReadingDto previousRdg = getPreviousRdgFromAccountNo(accountNo);
+        meterReading.setPrevRdgDate(previousRdg.getPrstRdgDate());
+        if(consumer.getBillingStatus().equals("N")){
+            meterReading.setPrevRdgDate(LocalDate.of(1900,1,1));
+            meterReading.setPrevKwh(0.0);
+            meterReading.setPrevKvah(0.0);
+            meterReading.setPrevKva(0.0);
+            meterReading.setPrevStatus(1L);
+        }else{
+            meterReading.setPrevStatus(previousRdg.getPrstStatus());
+            meterReading.setPrevRdgDate(previousRdg.getPrstRdgDate());
+            meterReading.setPrevKwh(previousRdg.getPrstKwh());
+            meterReading.setPrevKvah(previousRdg.getPrstKvah());
+            meterReading.setPrevKva(previousRdg.getPrstKva());
+        }
+        meterReading.setPrevKwh(previousRdg.getPrstKwh());
+        meterReading.setPrevKvah(previousRdg.getPrstKvah());
+        meterReading.setPrevKva(previousRdg.getPrstKva());
         meterReading.setCheckCondition(consumer.getConsumerId() + "," + meterReading.getRdgMonth() + "," + meterReading.getRdgYear());
         meterReading.setConsumerId(consumer.getConsumerId());
         meterReading.setPrstStatus(1L);

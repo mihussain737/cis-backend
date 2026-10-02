@@ -33,7 +33,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/actuator/health",
                                 "/actuator/info",
-                                "/api/connections/test"
+                                "/api/connections/test",
+                                "/error"
                         ).permitAll()
 
                         .requestMatchers("/api/metering/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
