@@ -6,6 +6,7 @@ import com.cis.billing_service.dto.BillingDetailsDto;
 import com.cis.billing_service.dto.ConsumerDto;
 import com.cis.billing_service.dto.MeterReadingDto;
 import com.cis.billing_service.entity.BillingDetailsT;
+import com.cis.billing_service.exception.BillAlreadyExistsException;
 import com.cis.billing_service.repo.BillingRepository;
 import com.cis.billing_service.service.BillingService;
 import org.modelmapper.ModelMapper;
@@ -38,6 +39,18 @@ public class BillingServiceImpl implements BillingService {
         MeterReadingDto meterRdg = meteringClient.getMeterReadingFromMonthAndYear(accountNo, rdgMonth, rdgYear);
         BillingDetailsT billingDetails =
                 new BillingDetailsT();
+
+        billingRepository.findByConsumerIdAndBillingMonthAndBillingYear(consumer.getConsumerId(), rdgMonth, rdgYear)
+                .ifPresent(existingBill -> {
+                    throw new BillAlreadyExistsException(
+                            "Bill already exists for consumer: " +
+                                    consumer.getAccountNo() +
+                                    " for month: " +
+                                    rdgMonth +
+                                    " and year: " +
+                                    rdgYear
+                    );
+                });
 
         // --------------------------------------------------
         // 4. ARREAR CALCULATION
