@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface BillingRepository extends JpaRepository<BillingDetailsT,Long> {
      Optional<BillingDetailsT> findTopByConsumerIdOrderByBillDateDesc(String consumerId);
+     Optional<BillingDetailsT> findByConsumerIdAndBillingMonthAndBillingYear(String consumerId, int billingMonth, int billingYear);
 }
