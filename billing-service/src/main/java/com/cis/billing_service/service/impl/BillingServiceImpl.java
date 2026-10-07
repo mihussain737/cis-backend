@@ -9,6 +9,7 @@ import com.cis.billing_service.entity.BillingDetailsT;
 import com.cis.billing_service.exception.BillAlreadyExistsException;
 import com.cis.billing_service.repo.BillingRepository;
 import com.cis.billing_service.service.BillingService;
+import feign.FeignException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,11 +33,17 @@ public class BillingServiceImpl implements BillingService {
 
     @Override
     public BillingDetailsDto billingProcess(Long accountNo, int rdgMonth, int rdgYear) {
+        MeterReadingDto meterRdg=null;
         ConsumerDto consumer = consumerClient.getConsumerByAccountNo(accountNo);
         if(consumer == null){
             throw new RuntimeException("Consumer not found for account number: " + accountNo);
         }
-        MeterReadingDto meterRdg = meteringClient.getMeterReadingFromMonthAndYear(accountNo, rdgMonth, rdgYear);
+        try {
+             meterRdg = meteringClient.getMeterReadingFromMonthAndYear(accountNo, rdgMonth, rdgYear);
+        }catch(FeignException.NotFound e){
+            throw new RuntimeException("Meter reading not found for account number: " + accountNo +
+                    " for month: " + rdgMonth + " and year: " + rdgYear);
+        }
         BillingDetailsT billingDetails =
                 new BillingDetailsT();
 

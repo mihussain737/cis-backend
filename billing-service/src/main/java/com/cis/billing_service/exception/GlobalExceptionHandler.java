@@ -18,4 +18,14 @@ public class GlobalExceptionHandler {
         errorResponse.setPathname(webRequest.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest webRequest){
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage(ex.getMessage());
+        errorResponse.setStatus(org.springframework.http.HttpStatus.CONFLICT);
+        errorResponse.setTimestamp(java.time.LocalDateTime.now());
+        errorResponse.setPathname(webRequest.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+}
 }
