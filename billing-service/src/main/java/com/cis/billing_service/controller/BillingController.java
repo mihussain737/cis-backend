@@ -33,4 +33,14 @@ public class BillingController {
         BillingDetailsDto billingDetailsDto = billingService.billingProcess(accountNo, rdgMonth, rdgYear);
         return new ResponseEntity<>(billingDetailsDto, HttpStatus.OK);
     }
+
+    @GetMapping("/{accountNo}/outstanding")
+    public ResponseEntity<?> getOutstandingAmount(@PathVariable Long accountNo) {
+        try {
+            return ResponseEntity.ok(billingService.getOutstandingAmount(accountNo));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 }

@@ -2,9 +2,7 @@ package com.cis.billing_service.service.impl;
 
 import com.cis.billing_service.client.ConsumerClient;
 import com.cis.billing_service.client.MeteringClient;
-import com.cis.billing_service.dto.BillingDetailsDto;
-import com.cis.billing_service.dto.ConsumerDto;
-import com.cis.billing_service.dto.MeterReadingDto;
+import com.cis.billing_service.dto.*;
 import com.cis.billing_service.entity.BillingDetailsT;
 import com.cis.billing_service.exception.BillAlreadyExistsException;
 import com.cis.billing_service.repo.BillingRepository;
@@ -13,6 +11,7 @@ import feign.FeignException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -32,65 +31,182 @@ public class BillingServiceImpl implements BillingService {
     private ModelMapper modelMapper;
 
     @Override
-    public BillingDetailsDto billingProcess(Long accountNo, int rdgMonth, int rdgYear) {
-        MeterReadingDto meterRdg=null;
-        ConsumerDto consumer = consumerClient.getConsumerByAccountNo(accountNo);
-        if(consumer == null){
-            throw new RuntimeException("Consumer not found for account number: " + accountNo);
-        }
-        try {
-             meterRdg = meteringClient.getMeterReadingFromMonthAndYear(accountNo, rdgMonth, rdgYear);
-        }catch(FeignException.NotFound e){
-            throw new RuntimeException("Meter reading not found for account number: " + accountNo +
-                    " for month: " + rdgMonth + " and year: " + rdgYear);
-        }
-        BillingDetailsT billingDetails =
-                new BillingDetailsT();
+    @Transactional
+    public BillingDetailsDto billingProcess(
+            Long accountNo,
+            int rdgMonth,
+            int rdgYear) {
 
-        billingRepository.findByConsumerIdAndBillingMonthAndBillingYear(consumer.getConsumerId(), rdgMonth, rdgYear)
+        // ==========================================
+        // 1. GET CONSUMER
+        // ==========================================
+
+        ConsumerDto consumer =
+                consumerClient.getConsumerByAccountNo(accountNo);
+
+        if (consumer == null) {
+            throw new RuntimeException(
+                    "Consumer not found for account number: "
+                            + accountNo
+            );
+        }
+
+        // ==========================================
+        // 2. CHECK DUPLICATE BILL
+        // ==========================================
+
+        billingRepository
+                .findByConsumerIdAndBillingMonthAndBillingYear(
+                        consumer.getConsumerId(),
+                        rdgMonth,
+                        rdgYear
+                )
                 .ifPresent(existingBill -> {
+
                     throw new BillAlreadyExistsException(
-                            "Bill already exists for consumer: " +
-                                    consumer.getAccountNo() +
-                                    " for month: " +
-                                    rdgMonth +
-                                    " and year: " +
-                                    rdgYear
+                            "Bill already exists for account "
+                                    + accountNo
+                                    + " for month "
+                                    + rdgMonth
+                                    + " and year "
+                                    + rdgYear
                     );
                 });
 
-        // --------------------------------------------------
-        // 4. ARREAR CALCULATION
-        // --------------------------------------------------
+        // ==========================================
+        // 3. GET METER READING
+        // ==========================================
 
-        BigDecimal arrear = BigDecimal.ZERO;
+        MeterReadingDto meterRdg;
 
-        if ("N".equals(consumer.getBillingStatus())) {
+        try {
 
-            // No previous arrear
-            arrear = BigDecimal.ZERO;
+            meterRdg =
+                    meteringClient
+                            .getMeterReadingFromMonthAndYear(
+                                    accountNo,
+                                    rdgMonth,
+                                    rdgYear
+                            );
 
-        } else {
+        } catch (FeignException.NotFound e) {
 
-            // Consumer has previous arrear
-            BillingDetailsT previousBill =
-                    billingRepository.findTopByConsumerIdOrderByBillDateDesc(consumer.getConsumerId())
-                            .orElse(null);
-
-            if (previousBill != null) {
-
-                arrear = previousBill.getTotalAmount();
-
-                if (arrear == null) {
-                    arrear = BigDecimal.ZERO;
-                }
-            }
+            throw new RuntimeException(
+                    "Meter reading not found for account number: "
+                            + accountNo
+                            + " for month: "
+                            + rdgMonth
+                            + " and year: "
+                            + rdgYear
+            );
         }
 
-        billingDetails.setArrear(arrear);
+        if (meterRdg == null) {
+
+            throw new RuntimeException(
+                    "Meter reading not found for account number: "
+                            + accountNo
+            );
+        }
+
+        // ==========================================
+        // 4. READINGS
+        // ==========================================
+
+        BigDecimal previousReading =
+                BigDecimal.valueOf(
+                        meterRdg.getPrevKwh()
+                );
+
+        BigDecimal currentReading =
+                BigDecimal.valueOf(
+                        meterRdg.getPrstKwh()
+                );
+
+        // ==========================================
+        // 5. VALIDATE READINGS
+        // ==========================================
+
+        if (previousReading.compareTo(BigDecimal.ZERO) < 0) {
+
+            throw new RuntimeException(
+                    "Previous reading cannot be negative"
+            );
+        }
+
+        if (currentReading.compareTo(BigDecimal.ZERO) < 0) {
+
+            throw new RuntimeException(
+                    "Current reading cannot be negative"
+            );
+        }
+
+        if (currentReading.compareTo(previousReading) < 0) {
+
+            throw new RuntimeException(
+                    "Current reading cannot be less than previous reading"
+            );
+        }
+
+        // ==========================================
+        // 6. CALCULATE CONSUMPTION
+        // ==========================================
+
+        BigDecimal consumption =
+                currentReading.subtract(previousReading);
+
+        // ==========================================
+        // 7. UNIT RATE
+        // ==========================================
+
+        BigDecimal unitRate =
+                new BigDecimal("5.00");
+
+        // ==========================================
+        // 8. ENERGY CHARGE
+        // ==========================================
+
+        BigDecimal energyCharge =
+                consumption.multiply(unitRate);
+
+        // ==========================================
+        // 9. GET ARREAR
+        // ==========================================
+
+        BigDecimal arrear =
+                getPreviousArrear(
+                        consumer,
+                        accountNo
+                );
+
+        // ==========================================
+        // 10. TOTAL BILL
+        // ==========================================
+
+        BigDecimal totalAmount =
+                energyCharge.add(arrear);
+
+        // ==========================================
+        // 11. INITIAL PAYMENT VALUES
+        // ==========================================
+
+        BigDecimal paidAmount =
+                BigDecimal.ZERO;
+
+        BigDecimal outstandingAmount =
+                totalAmount;
+
+        // ==========================================
+        // 12. CREATE BILL
+        // ==========================================
+
+        BillingDetailsT billingDetails =
+                new BillingDetailsT();
+
+        billingDetails.setAccountNo(accountNo);
 
         billingDetails.setConsumerId(
-                meterRdg.getConsumerId()
+                consumer.getConsumerId()
         );
 
         billingDetails.setBillDate(
@@ -105,80 +221,146 @@ public class BillingServiceImpl implements BillingService {
                 meterRdg.getRdgYear()
         );
 
-        billingDetails.setBillNo(
-                "Bill-" +
-                        accountNo +
-                        "-" +
-                        meterRdg.getRdgMonth() +
-                        "-" +
-                        meterRdg.getRdgYear()
+        billingDetails.setPreviousReading(
+                previousReading
         );
 
-        // --------------------------------------------------
-        // 6. UNIT RATE
-        // --------------------------------------------------
+        billingDetails.setCurrentReading(
+                currentReading
+        );
 
-        BigDecimal unitRate =
-                new BigDecimal("5");
+        billingDetails.setConsumption(
+                consumption
+        );
 
-        billingDetails.setUnitRate(unitRate);
-
-        // --------------------------------------------------
-        // 7. CONSUMPTION
-        // --------------------------------------------------
-
-        BigDecimal previousReading =
-                BigDecimal.valueOf(meterRdg.getPrevKwh());
-
-        BigDecimal presentReading =
-                BigDecimal.valueOf(meterRdg.getPrstKwh());
-
-        BigDecimal consumption =
-                presentReading.subtract(previousReading);
-
-        if (consumption.compareTo(BigDecimal.ZERO) < 0) {
-
-            throw new RuntimeException(
-                    "Present reading cannot be less than previous reading"
-            );
-        }
-
-        // --------------------------------------------------
-        // 8. ENERGY CHARGE
-        // --------------------------------------------------
-
-        BigDecimal energyCharge =
-                consumption.multiply(unitRate);
+        billingDetails.setUnitRate(
+                unitRate
+        );
 
         billingDetails.setEnergyCharge(
                 energyCharge
         );
 
-        // --------------------------------------------------
-        // 9. TOTAL AMOUNT
-        // --------------------------------------------------
-
-        BigDecimal totalAmount =
-                energyCharge.add(arrear);
+        billingDetails.setArrear(
+                arrear
+        );
 
         billingDetails.setTotalAmount(
                 totalAmount
         );
 
-        // --------------------------------------------------
-        // 10. SAVE BILL
-        // --------------------------------------------------
+        billingDetails.setPaidAmount(
+                paidAmount
+        );
+
+        billingDetails.setOutstandingAmount(
+                outstandingAmount
+        );
+
+        billingDetails.setPaymentStatus(
+                "UNPAID"
+        );
+
+        billingDetails.setStatus(
+                BillStatus.GENERATED
+        );
+
+        billingDetails.setBillNo(
+                generateBillNo(
+                        accountNo,
+                        rdgMonth,
+                        rdgYear
+                )
+        );
+
+        // ==========================================
+        // 13. SAVE
+        // ==========================================
 
         BillingDetailsT savedBill =
-                billingRepository.save(billingDetails);
+                billingRepository.save(
+                        billingDetails
+                );
 
-        // --------------------------------------------------
-        // 11. RETURN DTO
-        // --------------------------------------------------
+        // ==========================================
+        // 14. RETURN DTO
+        // ==========================================
 
         return modelMapper.map(
                 savedBill,
                 BillingDetailsDto.class
         );
+    }
+
+    @Override
+    public BillPaymentDto getOutstandingAmount(Long accountNo) {
+        ConsumerDto consumer = consumerClient.getConsumerByAccountNo(accountNo);
+        if (consumer == null) {
+            throw new RuntimeException("Consumer not found for account number: " + accountNo);
+        }
+
+        BillingDetailsT billingDetails = billingRepository
+                .findTopByConsumerIdOrderByBillDateDesc(consumer.getConsumerId())
+                .orElseThrow(() -> new RuntimeException("Billing details not found for account number: " + accountNo));
+
+        BillPaymentDto billPaymentDto = new BillPaymentDto();
+        billPaymentDto.setAccountNo(accountNo);
+        billPaymentDto.setBillNo(billingDetails.getBillNo());
+        billPaymentDto.setBillMonth(billingDetails.getBillingMonth());
+        billPaymentDto.setBillYear(billingDetails.getBillingYear());
+        billPaymentDto.setBillAmount(billingDetails.getEnergyCharge());
+        billPaymentDto.setArrear(billingDetails.getArrear());
+        billPaymentDto.setTotalAmount(billingDetails.getTotalAmount());
+        billPaymentDto.setPaidAmount(billingDetails.getPaidAmount());
+        billPaymentDto.setOutStandingAmount(billingDetails.getTotalAmount().subtract(billingDetails.getPaidAmount()));
+        billPaymentDto.setStatus("UNPAID");
+        return billPaymentDto;
+    }
+
+    private BigDecimal getPreviousArrear(
+            ConsumerDto consumer,
+            Long accountNo) {
+
+        // Consumer says there is no arrear
+        if ("N".equalsIgnoreCase(
+                consumer.getBillingStatus())) {
+
+            return BigDecimal.ZERO;
+        }
+
+        BillingDetailsT previousBill =
+                billingRepository
+                        .findTopByAccountNoOrderByBillDateDesc(
+                                accountNo
+                        )
+                        .orElse(null);
+
+        if (previousBill == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal outstanding =
+                previousBill.getOutstandingAmount();
+
+        if (outstanding == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return outstanding.max(
+                BigDecimal.ZERO
+        );
+    }
+
+    private String generateBillNo(
+            Long accountNo,
+            int month,
+            int year) {
+
+        return "Bill-"
+                + accountNo
+                + "-"
+                + month
+                + "-"
+                + year;
     }
 }
