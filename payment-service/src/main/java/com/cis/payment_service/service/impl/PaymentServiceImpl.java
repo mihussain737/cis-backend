@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -96,5 +97,27 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 6. Return saved payment details
         return modelMapper.map(savedPayment, PaymentDto.class);
+    }
+
+    @Override
+    public PaymentDto getPaymentDetails(String paymentId) {
+        PaymentDetails payment = paymentDetailsRepository.findById(paymentId).orElseThrow(
+                () -> new RuntimeException("Payment not found")
+        );
+        return modelMapper.map(payment, PaymentDto.class);
+    }
+
+    @Override
+    public List<PaymentDto> getPaymentHistory(Long accountNo) {
+
+        List<PaymentDetails> payments =
+                paymentDetailsRepository
+                        .findByAccountNoOrderByPaymentDateDesc(accountNo);
+
+        return payments.stream()
+                .map(payment ->
+                        modelMapper.map(payment, PaymentDto.class)
+                )
+                .toList();
     }
 }
