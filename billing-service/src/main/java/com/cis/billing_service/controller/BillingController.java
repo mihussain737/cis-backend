@@ -1,6 +1,7 @@
 package com.cis.billing_service.controller;
 
 import com.cis.billing_service.client.MeteringClient;
+import com.cis.billing_service.dto.BillPaymentDto;
 import com.cis.billing_service.dto.BillingDetailsDto;
 import com.cis.billing_service.dto.MeterReadingDto;
 import com.cis.billing_service.service.BillingService;
@@ -35,12 +36,12 @@ public class BillingController {
     }
 
     @GetMapping("/{accountNo}/outstanding")
-    public ResponseEntity<?> getOutstandingAmount(@PathVariable Long accountNo) {
+    public ResponseEntity<BillPaymentDto> getOutstandingAmount(@PathVariable Long accountNo) {
         try {
             return ResponseEntity.ok(billingService.getOutstandingAmount(accountNo));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
